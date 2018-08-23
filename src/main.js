@@ -3,8 +3,14 @@ import App from './App.vue'
 //导入路由
 import VueRouter from 'vue-router';
 import Index from './components/01.index.vue';
-
+// 引入element
+import ElementUI from 'element-ui';
+//import './assets/lib/css/element-ui.css';
+import 'element-ui/lib/theme-chalk/index.css';
+//使用中间件
+Vue.use(ElementUI);
 Vue.use(VueRouter);
+
 //定义路由规则
 let routes = [
   {
