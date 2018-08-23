@@ -4,7 +4,7 @@ h1, h2, h3, h4, h5, h6{font-size:12px;font-weight:normal}
 body>div{margin:0 auto}
 div {text-align:left}
 a img {border:0}
-body { color: #333; text-align: center; font: 12px "微软雅黑"; background-color: #2B2B2B; }
+body { color: #333; text-align: center; font: 12px "微软雅黑"; }
 ul, ol, li {list-style-type:none;vertical-align:0}
 
 .menu{height:48px;display:block;padding:0px;width:999px;margin:0px auto 0 auto;}
