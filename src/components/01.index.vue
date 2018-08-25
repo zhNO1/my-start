@@ -14,12 +14,12 @@
                     <div class="left-220" style="margin: 0px;">
                         <div class="banner-nav">
                             <ul>
-                                <li v-for="(item, index) in catelist" :key="item.id">
+                                <li v-for="item in catelist" :key="item.id">
                                     <h3>
                                         <i class="iconfont icon-arrow-right"></i>
                                         <span>{{item.title}}</span>
                                         <p>
-                                            <span v-for="(itemson, indexson) in item.subcates" :key="item.id">
+                                            <span v-for="itemson in item.subcates" :key="itemson.id">
                                                 {{itemson.title}}
                                             </span>
                                             
@@ -31,7 +31,7 @@
                                                 <a href="/goods/40.html">{{item.title}}</a>
                                             </dt>
                                             <dd>
-                                                <a v-for="(item, index) in item.subcates" :key="item.id" href="/goods/43.html">{{item.title}}</a>
+                                                <a v-for="itemson in item.subcates" :key="itemson.id" href="/goods/43.html">{{item.title}}</a>
                                               
                                             </dd>
                                         </dl>
@@ -45,7 +45,7 @@
                     <!--幻灯片-->
                     <div class="left-705">
                              <el-carousel height="341px" indicator-position="outside">
-                                <el-carousel-item v-for="(item,index) in sliderlist" :key="item.id">
+                                <el-carousel-item v-for="item in sliderlist" :key="item.id">
                                     <!-- <h3>{{ index+1 }}</h3> -->
                                     <img :src="item.img_url" alt="">
                                        </el-carousel-item>
@@ -95,11 +95,11 @@
                 </div>
             </div>
         </div>
-        <div class="section" v-for="(item, index) in goodlist" :key="item.level1cateid">
+        <div class="section" v-for="item in goodlist" :key="item.level1cateid">
             <div class="main-tit">
                 <h2>{{item.catetitle}}</h2>
                 <p>
-                    <a v-for="(itemson, indexson) in item.level2catelist"  href="/goods/43.html">{{itemson.subcatetitle}}</a>
+                    <a v-for="itemson in item.level2catelist"   :key="itemson.subcateid" href="/goods/43.html">{{itemson.subcatetitle}}</a>
                             <a href="/goods/40.html">更多
                         <i>+</i>
                     </a>
@@ -108,10 +108,12 @@
             <div class="wrapper clearfix">
                 <div class="wrap-box">
                     <ul class="img-list">
-                        <li v-for="(itemson, indexson) in item.datas" :key="item.cateID">
-                            <a href="#/site/goodsinfo/87" class="">
+                        <li v-for="itemson in item.datas" :key="itemson.artID">
+                        <router-link :to="'/detail/'+itemson.artID">
+                            <!-- <a href="#/site/goodsinfo/87" class=""> -->
                                 <div class="img-box">
-                                    <img :src="itemson.img_url">
+                                    <!-- <img :src="itemson.img_url"> -->
+                                      <img  v-lazy="itemson.img_url">
                                 </div>
                                 <div class="info">
                                     <h3>{{itemson.artTitle}}</h3>
@@ -124,7 +126,8 @@
                                         </span>
                                     </p>
                                 </div>
-                            </a>
+                            <!-- </a> -->
+                            </router-link>
                         </li>
                        
                     </ul>
@@ -137,7 +140,7 @@
 //导入axios
 import axios from "axios";
 //导入moment.js
-import moment from "moment";
+//import moment from "moment";
 
 export default {
   //设置名字
@@ -167,12 +170,12 @@ export default {
         this.goodlist = response.data.message;
       });
   },
-  //过滤器
-  filters: {
-    filtersDate(val) {
-      return moment(val).format("YYYY年MM月DD日");
-    }
-  }
+//   //过滤器 将路由抽取
+//   filters: {
+//     filtersDate(val) {
+//       return moment(val).format("YYYY年MM月DD日");
+//     }
+//   }
 };
 </script>
 <style>
