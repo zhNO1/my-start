@@ -13,7 +13,10 @@
                 <div class="wrap-box">
                     <div class="left-925">
                         <div class="goods-box clearfix">
-                            <div class="pic-box"></div>
+                            <div class="pic-box">
+                                <ProductZoomer v-if="images.normal_size.length!=0" :base-images="images" :base-zoomer-options="zoomerOptions">
+                                </ProductZoomer>
+                            </div>
                             <div class="goods-spec">
                                 <h1>{{goodsinfo.title}}</h1>
                                 <p class="subtitle">{{goodsinfo.sub_title}}</p>
@@ -66,7 +69,7 @@
                                         <dd>
                                             <div id="buyButton" class="btn-buy">
                                                 <button onclick="cartAdd(this,'/',1,'/shopping.html');" class="buy">立即购买</button>
-                                                <button onclick="cartAdd(this,'/',0,'/cart.html');" class="add">加入购物车</button>
+                                                <button @click="cartAdd" class="add">加入购物车</button>
                                             </div>
                                         </dd>
                                     </dl>
@@ -98,47 +101,38 @@
                                         </div>
                                         <div class="conn-box">
                                             <div class="editor">
-                                                <textarea id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
+                                                <textarea id="txtContent" v-model.trim="commentContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                             <div class="subcon">
-                                                <input id="btnSubmit" name="submit" type="submit" value="提交评论" class="submit">
+                                                <input id="btnSubmit" name="submit" @click="submitComment" type="submit" value="提交评论" class="submit">
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                         </div>
                                     </div>
                                     <ul id="commentList" class="list-box">
-                                        <p style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
-                                        <li>
+                                        <p v-if="messageList.length==0" style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
+                                        <li v-for="item in messageList" :key="item.id">
                                             <div class="avatar-box">
                                                 <i class="iconfont icon-user-full"></i>
                                             </div>
                                             <div class="inner-box">
                                                 <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:58:59</span>
+                                                    <span>{{item.user_name}}</span>
+                                                    <span>{{item.add_time |filtersDate}}</span>
                                                 </div>
-                                                <p>testtesttest</p>
+                                                <p>{{item.content}}</p>
                                             </div>
                                         </li>
-                                        <li>
-                                            <div class="avatar-box">
-                                                <i class="iconfont icon-user-full"></i>
-                                            </div>
-                                            <div class="inner-box">
-                                                <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:59:36</span>
-                                                </div>
-                                                <p>很清晰调动单很清晰调动单</p>
-                                            </div>
-                                        </li>
+
                                     </ul>
                                     <div class="page-box" style="margin: 5px 0px 0px 62px;">
                                         <div id="pagination" class="digg">
-                                            <span class="disabled">« 上一页</span>
+                                            <Page :total="totalCount" show-elevator show-sizer placement="top" :page-size-opts="[5, 6,10, 13, 26]" @on-change="pageChange" @on-page-size-change="pageSizeChange" />
+
+                                            <!-- <span class="disabled">« 上一页</span>
                                             <span class="current">1</span>
-                                            <span class="disabled">下一页 »</span>
+                                            <span class="disabled">下一页 »</span> -->
                                         </div>
                                     </div>
                                 </div>
@@ -152,9 +146,11 @@
                                 <ul class="side-img-list">
                                     <li v-for="item in hotgoodslist" :key="item.id">
                                         <div class="img-box">
-                                            <a href="#/site/goodsinfo/90" class="">
+                                            <!-- <a href="#/site/goodsinfo/90" class=""> -->
+                                            <router-link :to="'/detail/'+item.id">
                                                 <img :src="item.img_url">
-                                            </a>
+                                            </router-link>
+                                            <!-- </a> -->
                                         </div>
                                         <div class="txt-box">
                                             <a href="#/site/goodsinfo/90" class="">{{item.title}}</a>
@@ -172,11 +168,13 @@
         <BackTop :height="100" :bottom="200">
             <div class="top">返回顶端</div>
         </BackTop>
+        <!-- 移动的小图片 -->
+        <img v-if="imglist.length!=0" class="moveImg" :src="imglist[0].original_path" alt="">
     </div>
 </template>
 <script>
-//导入axiso
-//import axios from "axios";
+//导入jq
+import $ from "jquery";
 export default {
   name: "detail",
   data: function() {
@@ -186,53 +184,161 @@ export default {
       hotgoodslist: [], //商品列表
       imglist: [], //图片信息
       buyCount: 0, //购买数量
-      showDiscuss: false // 是否显示评论 默认为false  默认显示 商品内容,
+      showDiscuss: false, // 是否显示评论 默认为false  默认显示 商品内容,
+      messageList: [],
+      pageIndex: 1, //评论页数
+      pageSize: 10, //一页显示五条
+      totalCount: 0, //总条数
+      commentContent: "", //发表评论内容
+      // 放大镜设置
+      zoomerOptions: {
+        zoomFactor: 5, // 放大倍数
+        pane: "container-round", // container-round 小放大镜
+        hoverDelay: 300,
+        namespace: "zoomer",
+        move_by_click: true, // true 点击切换
+        scroll_items: 7,
+        choosed_thumb_border_color: "yellowgreen" // 框的颜色
+      },
+      // 这里的数据 需要在接口调用完毕之后 才能够获取
+      images: {
+        normal_size: []
+      }
     };
   },
   methods: {
     buyCountChange() {
       console.log("变啦");
+    },
+    //获取商品详情的方法
+    getProductDetail() {
+      //保存id;
+      this.productId = parseInt(this.$route.params.id);
+      //获取数据
+      this.$axios
+        .get(`site/goods/getgoodsinfo/${this.productId}`)
+        .then(response => {
+          // console.log(response);
+          // 保存起来
+          this.goodsinfo = response.data.message.goodsinfo;
+          this.hotgoodslist = response.data.message.hotgoodslist;
+          this.imglist = response.data.message.imglist;
+
+          // 处理 放大镜数据
+          let temArr = [];
+          // 循环处理数据
+          this.imglist.forEach((v, i) => {
+            temArr.push({
+              id: v.id,
+              url: v.original_path
+            });
+          });
+          // 临时数组
+          this.images.normal_size = temArr;
+        });
+    },
+    //评论的方法
+    getComments() {
+      this.$axios
+        .get(
+          `site/comment/getbypage/goods/${this.productId}?pageIndex=${
+            this.pageIndex
+          }&pageSize=${this.pageSize}`
+        )
+        .then(response => {
+          //  console.log(response);
+          this.messageList = response.data.message;
+          this.totalCount = response.data.totalcount;
+        });
+    },
+    //提交评论
+    submitComment() {
+      // 判断是否为空
+      if (this.commentContent == "") {
+        // this.$Message.error('对方不想跟你说话,并且想你抛出一顿BUG');
+        this.$Message.error({
+          content: "对方不想理你,并且想你抛出了世界上最好的语言",
+          closable: true
+        });
+        return;
+      }
+      // 发表评论
+      this.$axios
+        .post(`site/validate/comment/post/goods/${this.productId}`, {
+          commenttxt: this.commentContent
+        })
+        .then(response => {
+          //   // console.log(response)
+          // 成功了
+          // 提示用户
+          this.$Message.success("评论发表成功!!");
+          // 重新获取数据 看到了第三页
+          //清空评论内容
+          this.commentContent = "";
+          // 去第一页
+          this.pageIndex = 1;
+          this.getComments();
+        });
+    },
+    // 页码改变 会给我页码
+    pageChange(page) {
+      this.pageIndex = page;
+      // 页码改变时 重新获取数据即可
+      this.getComments();
+    },
+    // 会给我页容量
+    pageSizeChange(size) {
+      this.pageSize = size;
+      // 如果就是第一页 重新获取数据
+      if (this.pageIndex == 1) {
+        this.getComments();
+      }
+    },
+    //使用jq加入购物车
+    cartAdd() {
+      //获取购物车位置
+      let cartOffset = $(".add").offset();
+      //console.log(cartOffset);
+      //获取购物车的位置
+      let targetOffset = $(".icon-cart").offset();
+      //console.log(targetOffset);
+      //移动到指定位置并且显示
+      $(".moveImg")
+        .show()
+        .addClass("move")
+        .css(cartOffset)
+        .animate(targetOffset,1000, () => {
+          $(".moveImg")
+            .removeClass("move")
+            .hide();
+        });
     }
   },
+
   //创建之后
   created() {
-    //保存id;
-    this.productId = parseInt(this.$route.params.id);
-    //    //获取数据
-    //    axios.get(`http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`)
-    //    .then(response=>{
-    //       console.log(response);
-    //        this.hotgoodslist=response.data.message.hotgoodslist;
-    //        this.imglist=response.data.message.imglist;
-    //        this.goodsinfo=response.data.message.goodsinfo;
-    //    })
-    //创建异步对象
-    let xml = new XMLHttpRequest();
-    //设置请求行
-    xml.open(
-      "get",
-      `http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`
-    );
-    //设置请求头 get不需要
-    //注册回调函数
-    xml.onload = () => {
-      //  console.log(xml.responseText);
-      let backData = JSON.parse(xml.responseText);
-      //  console.log(backData);
-      this.hotgoodslist = backData.message.hotgoodslist;
-      this.goodsinfo = backData.message.goodsinfo;
-      this.imglist = backData.message.imglist;
-    };
-    //设置请求体
-    xml.send();
+    //获取详情数据
+    this.getProductDetail();
+    //重新获取评论数据
+    this.getComments();
+  },
+  //监听
+  watch: {
+    $route(val, oldVal) {
+      // 数组长度为0 直接销毁
+      this.images.normal_size = [];
+      //重新调用接口 获取数据 渲染页面
+      this.getProductDetail();
+      //   重新获取评论数据
+    }
   }
 };
 </script>
-<style>
+<style lang="less">
 /* iview的回到顶部 */
 .top {
   padding: 10px;
-  background: rgba(0, 153, 229, 0.7);
+  background: rgba(147, 211, 243, 0.7);
   color: #fff;
   text-align: center;
   border-radius: 2px;
@@ -242,6 +348,40 @@ export default {
   width: 100%;
   /* 去除图片底部的 间隙 */
   display: block;
+}
+/* 放大镜 */
+.pic-box {
+  width: 395px;
+  .control-box .thumb-list {
+    display: flex;
+    justify-content: center;
+    img {
+      width: 80px;
+      height: 80px;
+      margin: 2px;
+    }
+  }
+  .control {
+    //   text-align:center;
+    display: flex;
+    // 主轴
+    justify-content: center;
+    // 纵轴 副轴 侧轴
+    align-items: center;
+  }
+}
+// 移动图片的样式
+.moveImg {
+  position: absolute;
+  width: 50px;
+  display: none;
+  //  top:0;
+  // left:0;
+}
+.moveImg.move {
+     transform: scale(.5,.5) rotateZ(3600deg);
+    opacity: .4;
+    transition: transform 1s,opacity  1s;
 }
 </style>
 

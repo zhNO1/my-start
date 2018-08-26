@@ -137,8 +137,6 @@
     </div>
     </template>
 <script>
-//导入axios
-import axios from "axios";
 //导入moment.js
 //import moment from "moment";
 
@@ -156,7 +154,7 @@ export default {
   //创建完毕之后
   created() {
     //获取网络数据请求
-    axios.get("http://47.106.148.205:8899/site/goods/gettopdata/goods")
+    this.$axios.get("site/goods/gettopdata/goods")
       .then(response => {
         //  console.log(response);
         this.catelist = response.data.message.catelist;
@@ -164,7 +162,7 @@ export default {
         this.toplist = response.data.message.toplist;
       });
     //获取商品分类分组数据
-    axios.get("http://47.106.148.205:8899/site/goods/getgoodsgroup")
+    this.$axios.get("site/goods/getgoodsgroup")
       .then(response => {
         //console.log(response);
         this.goodlist = response.data.message;

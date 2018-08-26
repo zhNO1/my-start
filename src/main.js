@@ -6,16 +6,21 @@ import VueRouter from 'vue-router';
 import Index from './components/01.index.vue';
 //导入 productdetail.vue
 import Detail from'./components/02.productdetail.vue';
+//全局导入axiso
+import axios from "axios";
+//配置全局基地址
+axios.defaults.baseURL = 'http://47.106.148.205:8899';
+// 增加到Vue的原型中
+Vue.prototype.$axios = axios;
 // 引入element
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 //导入iview
 import iView from 'iview';
 import 'iview/dist/styles/iview.css';
-//使用中间件
-Vue.use(iView);
-Vue.use(ElementUI);
-Vue.use(VueRouter);
+//导入放大镜
+import ProductZoomer from 'vue-product-zoomer'
+Vue.use(ProductZoomer);
 //导入lazy
 import VueLazyload from 'vue-lazyload';
 //注册到vue上
@@ -24,9 +29,12 @@ Vue.use(VueLazyload, {
   //error: 'dist/error.png',
   //loading: './assets/img/img-174f5006c5197dc2d08dcb8469c9467d.jpg',
   loading: require('./assets/img/img-174f5006c5197dc2d08dcb8469c9467d.jpg'),
-
   attempt: 1
 })
+//使用中间件
+Vue.use(iView);
+Vue.use(ElementUI);
+Vue.use(VueRouter);
 //定义路由规则
 let routes = [
   {
