@@ -153,7 +153,10 @@
                                             <!-- </a> -->
                                         </div>
                                         <div class="txt-box">
-                                            <a href="#/site/goodsinfo/90" class="">{{item.title}}</a>
+                                            <router-link :to="'/detail/'+item.id">
+                                                {{item.title}}
+                                            </router-link>
+                                            <!-- <a href="#/site/goodsinfo/90" class=""></a> -->
                                             <span>{{item.add_time | filtersDate}}</span>
                                         </div>
                                     </li>
@@ -296,6 +299,11 @@ export default {
     },
     //使用jq加入购物车
     cartAdd() {
+        //为0提示
+        if (this.buyCount == 0) {
+        this.$Message.error("哥们,买点呗,不买怎么加入购物车呀 (づ￣ 3￣)づ");
+        return;
+      }
       //获取购物车位置
       let cartOffset = $(".add").offset();
       //console.log(cartOffset);
@@ -311,6 +319,13 @@ export default {
           $(".moveImg")
             .removeClass("move")
             .hide();
+        });
+        //测试数据
+        //this.$store.commit("increment", 68);
+        //直接修改购物车商品数据
+        this.$store.commit("addGoods",{
+            goodId:this.productId,
+            goodNum:this.buyCount
         });
     }
   },
