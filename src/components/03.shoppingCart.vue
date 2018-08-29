@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-loading="loading" element-loading-text="拼命加载中" element-loading-spinner="el-icon-loading" element-loading-background="rgba(0,0,0,.5)">
         <div class="section">
             <div class="location">
                 <span>当前位置：</span>
@@ -65,7 +65,7 @@
                                                 <p>您的购物车为空，
                                                     <router-link to="/index">马上去购物</router-link>吧！
                                                     <!-- <a href="/index.html">马上去购物</a>吧！ -->
-                                                    </p>
+                                                </p>
                                             </div>
                                         </div>
                                     </td>
@@ -95,7 +95,7 @@
                                     <td>{{item.buycount*item.sell_price}}</td>
                                     <td>
                                         <!-- 按钮 -->
-                                        <el-button type="danger"  @click="delone(item.id)" icon="el-icon-delete" circle></el-button>
+                                        <el-button type="danger" @click="delone(item.id)" icon="el-icon-delete" circle></el-button>
 
                                     </td>
                                 </tr>
@@ -115,8 +115,10 @@
                     <!--购物车底部-->
                     <div class="cart-foot clearfix">
                         <div class="right-box">
-                            <button class="button" onclick="javascript:location.href='/index.html';">继续购物</button>
-                            <button class="submit" onclick="formSubmit(this, '/', '/shopping.html');">立即结算</button>
+                            <router-link to="/index">
+                                <button class="button" onclick="javascript:location.href='/index.html';">继续购物</button>
+                            </router-link>
+                            <button class="submit" @click="checkandsumit">立即结算</button>
                         </div>
                     </div>
                     <!--购物车底部-->
@@ -131,7 +133,8 @@ export default {
   name: "shoppingCart",
   data: function() {
     return {
-      message: []
+      message: [],
+      loading: false // 是否正在加载中
     };
   },
   created() {
@@ -145,11 +148,12 @@ export default {
       ids += ",";
     }
     //截取最后一个逗号
+    // console.log(ids);
     ids = ids.slice(0, -1);
-   // console.log(ids);
+    // console.log(ids);
     //用axios 获取接口
     this.$axios.get(`site/comment/getshopcargoods/${ids}`).then(response => {
-     // console.log(response);
+      // console.log(response);
       //我们自行拼接个数
       response.data.message.forEach(v => {
         // 获取 Vuex中的 id对应的值
@@ -160,36 +164,36 @@ export default {
     });
   },
   //计算属性
-  computed:{
-       // 总金额
-totalPrice(){
-  let totalPrice=0;
-   //被选中的价格累加
-   this.message.forEach(v=>{
-       if(v.selected){
-           //累加
-           totalPrice+=v.sell_price*v.buycount;
-       }
-   })
-   return totalPrice;
-},
- //总个数
- totalCount(){
-  let totalCount=0;
-   //被选中的价格累加
-   this.message.forEach(v=>{
-       if(v.selected){
-           //累加
-           totalCount+=parseInt(v.buycount);
-       }
-   })
-   return totalCount;
- }
+  computed: {
+    // 总金额
+    totalPrice() {
+      let totalPrice = 0;
+      //被选中的价格累加
+      this.message.forEach(v => {
+        if (v.selected) {
+          //累加
+          totalPrice += v.sell_price * v.buycount;
+        }
+      });
+      return totalPrice;
+    },
+    //总个数
+    totalCount() {
+      let totalCount = 0;
+      //被选中的价格累加
+      this.message.forEach(v => {
+        if (v.selected) {
+          //累加
+          totalCount += parseInt(v.buycount);
+        }
+      });
+      return totalCount;
+    }
   },
   //方法
   methods: {
     changeNum(num, id) {
-     // console.log(num, id);
+      // console.log(num, id);
       //调用仓库的方法 (提交载荷)
       this.$store.commit("updateGoodsNum", {
         goodId: id,
@@ -197,15 +201,48 @@ totalPrice(){
       });
     },
     //删除数据
-    delone(id){
-       //     console.log(id);
+    delone(id) {
+      //     console.log(id);
       // 提交载荷 这里是删除 Vuex中的
-      this.$store.commit("deleteGoods",id)
-      this.message.forEach((v,index)=>{
-          if(v.id==id){
-              this.message.splice(index,1);
+      this.$store.commit("deleteGoods", id);
+      this.message.forEach((v, index) => {
+        if (v.id == id) {
+          this.message.splice(index, 1);
+        }
+      });
+    },
+    //验证登录
+    checkandsumit() {
+      if (this.totalPrice == 0) {
+        this.$message.error("哥们写点东西呗");
+        return;
+      }
+      //定义一个变量拼接数据
+      let ids = "";
+      this.message.forEach(v => {
+          if(v.selected==true){
+        ids += v.id;
+        ids += ",";
           }
-      })
+      });
+      //截取最后一个逗号
+      ids = ids.slice(0, -1);
+      this.$router.push(`/order/${ids}`);
+      //整到导航守卫里
+      //     //  弹框提示 loading框
+      //       this.loading = true;
+      //    //判断是否登录
+      //    this.$axios.get("site/account/islogin").then(response=>{
+      //        console.log(response);
+
+      //        if(response.data.code=="nologin"){
+      //            //去登录页
+      //            this.$router.push('./login');
+      //        }else{
+      //            //去结算页
+      //            this.$router.push('./order');
+      //        }
+      //    })
     }
   }
 };

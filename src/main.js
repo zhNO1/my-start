@@ -8,10 +8,17 @@ import Index from './components/01.index.vue';
 import Detail from './components/02.productdetail.vue';
 //导入 shoppingCart.vue
 import ShoppingCart from './components/03.shoppingCart.vue';
+//导入login
+import Login from './components/04.login.vue';
+//导入 order
+import fillOrder from './components/05.fillOrder.vue';
+
 //全局导入axiso
 import axios from "axios";
 //配置全局基地址
 axios.defaults.baseURL = 'http://47.106.148.205:8899';
+// 跨域请求时 是否会携带 凭证(cookie)
+axios.defaults.withCredentials=true;
 // 增加到Vue的原型中
 Vue.prototype.$axios = axios;
 // 引入element
@@ -44,7 +51,10 @@ Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
     // count: 998
-    cartDate:JSON.parse(window.localStorage.getItem('goodkey'))|| {}
+    cartDate:JSON.parse(window.localStorage.getItem('goodkey'))|| {},
+     isLogin:false,
+     //来时的地址
+     fromPath:''
   },
   mutations: {
 
@@ -79,6 +89,14 @@ const store = new Vuex.Store({
       // delete 删除的属性不会触发视图更新
       // 需要调用Vue.delete方法才可以
       Vue.delete(state.cartDate,goodId);
+        },
+        //增加一个改变更累状态的方法
+        changeLoginStatus(state,isLogin){
+           state.isLogin=isLogin
+        },
+        //增加一个保存来时地址的方法
+        saveFromPath(state,fromPath){
+           state.fromPath=fromPath;
         }
   },
   // getters vuex的计算属性
@@ -122,12 +140,48 @@ let routes = [
     path: '/cart',
     component: ShoppingCart,
   },
+   //定义login
+   {
+    path: '/login',
+    component: Login,
+  },
+  //fillOrder
+  {
+    path: '/order/:ids',
+    component: fillOrder,
+  },
+  
 ]
 //实例化路由对象
 let router = new VueRouter({
   routes
 })
-
+//增加 导航守卫(路由守卫)
+router.beforeEach((to, from, next) => {
+  // console.log('to',to);
+  // console.log('from',from);
+  // 必须要执行 否则 不会跳转
+   // 每次过来都保存一下来时的地址
+  // 提交载荷 保存数据
+   store.commit("saveFromPath",from.path)
+  //判断是否登录
+  if(to.path.indexOf('/order/')!=-1){
+    //表示有order/
+    //调用接口
+    axios.get("site/account/islogin").then(response=>{
+      //登录了就继续访问
+      if(response.data.code!="nologin"){
+        next();
+      }else{
+        //没有登录打回去登录页
+        next('/login');
+      }
+    })
+  }else{
+    //不访问订单页直接访问
+    next()
+  }
+})
 //写全局过滤器
 //导入moment.js
 import moment from 'moment';
@@ -143,5 +197,15 @@ new Vue({
   //路由对象
   router,
   //store仓库对象
-  store
+  store,
+    // 最高级别的Vue组件(最外层的那个盒子(祖爷爷))
+   beforeCreate(){
+     axios.get("/site/account/islogin").then(response=>{
+              console.log(response);
+       if(response.data.code=="logined"){
+        // 登陆成功了
+         store.state.isLogin=true;         
+       }
+     })
+   }
 }).$mount('#app')
