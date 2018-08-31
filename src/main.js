@@ -12,6 +12,8 @@ import ShoppingCart from './components/03.shoppingCart.vue';
 import Login from './components/04.login.vue';
 //导入 order
 import fillOrder from './components/05.fillOrder.vue';
+//导入 payOrder
+import payOrder from './components/06.payOrder.vue';
 
 //全局导入axiso
 import axios from "axios";
@@ -149,8 +151,20 @@ let routes = [
   {
     path: '/order/:ids',
     component: fillOrder,
+    // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+    meta: {
+      checkLogin: true
+    }
   },
-  
+  //payOrder
+  {
+    path: '/payOrder/:orderid',
+    component: payOrder,
+     // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+     meta: {
+      checkLogin: true
+    }
+  },
 ]
 //实例化路由对象
 let router = new VueRouter({
@@ -158,14 +172,15 @@ let router = new VueRouter({
 })
 //增加 导航守卫(路由守卫)
 router.beforeEach((to, from, next) => {
-  // console.log('to',to);
+  console.log('to',to);
   // console.log('from',from);
   // 必须要执行 否则 不会跳转
    // 每次过来都保存一下来时的地址
   // 提交载荷 保存数据
    store.commit("saveFromPath",from.path)
   //判断是否登录
-  if(to.path.indexOf('/order/')!=-1){
+  //if(to.path.indexOf('/order/')!=-1){
+    if(to.meta.checkLogin == true){
     //表示有order/
     //调用接口
     axios.get("site/account/islogin").then(response=>{
