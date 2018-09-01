@@ -14,7 +14,14 @@ import Login from './components/04.login.vue';
 import fillOrder from './components/05.fillOrder.vue';
 //导入 payOrder
 import payOrder from './components/06.payOrder.vue';
-
+// 导入支付订单组件
+import PaySuccess from './components/07.paySuccess.vue';
+//导入会员中心
+import vipCenter from './components/08.vipCenter.vue';
+//导入订单列表
+import orderList from './components/09.orderList.vue';
+//导入支付订单详情
+import orderDetail from './components/10.orderDetail.vue'
 //全局导入axiso
 import axios from "axios";
 //配置全局基地址
@@ -165,6 +172,42 @@ let routes = [
       checkLogin: true
     }
   },
+   // 订单支付
+   {
+    path: '/paySuccess/:id',
+    component: PaySuccess,
+    // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+    meta: {
+      checkLogin: true
+    }
+  },
+  //会员中心
+  {
+    path: '/vipCenter',
+    component: vipCenter,
+    // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+    meta: {
+      checkLogin: true
+    }
+  },
+  //orderList 订单列表
+  {
+    path: '/orderList',
+    component: orderList,
+    // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+    meta: {
+      checkLogin: true
+    }
+  },
+  //orderDetail 订单支付详情
+  {
+    path: '/orderDetail/:id',
+    component: orderDetail,
+    // 路由元信息 可以随意加  订单支付页 也必须登陆才可以访问
+    meta: {
+      checkLogin: true
+    }
+  },
 ]
 //实例化路由对象
 let router = new VueRouter({
@@ -172,7 +215,7 @@ let router = new VueRouter({
 })
 //增加 导航守卫(路由守卫)
 router.beforeEach((to, from, next) => {
-  console.log('to',to);
+  //console.log('to',to);
   // console.log('from',from);
   // 必须要执行 否则 不会跳转
    // 每次过来都保存一下来时的地址
@@ -200,8 +243,13 @@ router.beforeEach((to, from, next) => {
 //写全局过滤器
 //导入moment.js
 import moment from 'moment';
-Vue.filter('filtersDate', function (val) {
-  return moment(val).format("YYYY年MM月DD日");
+Vue.filter('filtersDate', function (val,formatstr) {
+  //有值
+  if(formatstr!=undefined){
+    return moment(val).format(formatstr);
+  }else{
+    return moment(val).format("YYYY年MM月DD日");
+  }
 })
 
 
@@ -216,7 +264,7 @@ new Vue({
     // 最高级别的Vue组件(最外层的那个盒子(祖爷爷))
    beforeCreate(){
      axios.get("/site/account/islogin").then(response=>{
-              console.log(response);
+       //       console.log(response);
        if(response.data.code=="logined"){
         // 登陆成功了
          store.state.isLogin=true;         
