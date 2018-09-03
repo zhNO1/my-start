@@ -92,7 +92,8 @@ export default {
   name: "payOrder",
   data: function() {
     return {
-      orderInfo: {}
+      orderInfo: {},
+      interId:0
     };
   },
   created() {
@@ -104,7 +105,7 @@ export default {
         this.orderInfo = response.data.message[0];
       });
     // 用定时器的方式 轮询 查询是否支付订单
-    let interId = setInterval(() => {
+     this.interId = setInterval(() => {
       //调用接口
       this.$axios
         .get(`site/validate/order/getorder/${this.$route.params.orderid}`)
@@ -118,7 +119,7 @@ export default {
              setTimeout(()=>{
               this.$router.push("/paySuccess");
              },500)
-              clearInterval(interId);
+              clearInterval(this.interId);
          }else{
              //支付失败
          }
@@ -141,7 +142,11 @@ export default {
           this.$route.params.orderid
       );
     }
-  }
+  },
+   // 生命周期函数 销毁
+   destroyed() {
+       clearInterval(this.interId)
+   },
 };
 </script>
 <style>
